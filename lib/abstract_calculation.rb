@@ -13,11 +13,13 @@ class AbstractCalculation
       return @quantity * @regular
     end
   end
+
+  private
   
-  def calculate_excess
-    excess = @quantity - @max
-    total = (@max * @regular) + (excess * @extra)
-    
-    return total
-  end
+    def calculate_excess
+      excess = @quantity - @max
+      total = (@max * @regular) + (excess * @extra)
+      
+      return total
+    end
 end

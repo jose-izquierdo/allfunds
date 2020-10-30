@@ -12,17 +12,17 @@ class RefundReport
   EXCESS_PARKING_REFUND = 0.5
   
   def initialize(refunds)
-      @errors = false
-      @refunds = refunds 
-      @transportation = 0
-      @meal = 0
-      @parking = 0
-      @total_transportation = 0
-      @total_meal = 0
-      @total_parking = 0
-      @total_refund = 0
-      
-      valid_data? ? operate : (@errors = true)
+    @errors = false
+    @refunds = refunds 
+    @transportation = 0
+    @meal = 0
+    @parking = 0
+    @total_transportation = 0
+    @total_meal = 0
+    @total_parking = 0
+    @total_refund = 0
+    
+    valid_data? ? operate : (@errors = true)
   end
 
   def errors?
@@ -53,24 +53,12 @@ class RefundReport
     
     def operate
       @refunds.each do |refund|
-        add_transportation(refund) if refund[:key] == 'TRANSPORTATION'
-        add_meal(refund) if refund[:key] == 'MEAL'
-        add_parking(refund) if refund[:key] == 'PARKING'
+        @transportation += refund[:units] if refund[:key] == 'TRANSPORTATION'
+        @meal += refund[:units] if refund[:key] == 'MEAL'
+        @parking += refund[:units] if refund[:key] == 'PARKING'
       end
       
       calculate_refund unless @transportation == 0 && @meal == 0 && @parking == 0  
-    end
-
-    def add_transportation(refund)
-      @transportation += refund[:units]
-    end
-
-    def add_meal(refund)
-      @meal += refund[:units]
-    end
-
-    def add_parking(refund)
-      @parking += refund[:units]
     end
 
     def calculate_refund
