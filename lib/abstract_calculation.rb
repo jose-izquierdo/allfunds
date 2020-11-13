@@ -1,25 +1,19 @@
 class AbstractCalculation
-  def initialize(quantity, max, regular, extra)
-    @quantity = quantity
+  def initialize(max:, regular:, extra:)
     @max = max
     @regular = regular
     @extra = extra
   end
   
-  def calculate_refund
-    if @quantity > @max
-      calculate_excess
-    else
-      return @quantity * @regular
-    end
+  def calculate_refund(quantity)
+    return calculate_excess(quantity) if quantity > @max
+    quantity * @regular
   end
 
   private
-  
-    def calculate_excess
-      excess = @quantity - @max
-      total = (@max * @regular) + (excess * @extra)
-      
-      return total
-    end
+
+  def calculate_excess(quantity)
+    excess = quantity - @max
+    (@max * @regular) + (excess * @extra)
+  end
 end

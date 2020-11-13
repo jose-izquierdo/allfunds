@@ -1,71 +1,46 @@
 require_relative './abstract_calculation.rb'
 
 class RefundReport
-  MAX_KM = 100
-  REGULAR_KM_RATE = 0.12
-  EXCESS_KM_RATE = 0.08
-  MAX_MEALS = 3
-  REGULAR_MEALS_REFUND = 10
-  EXCESS_MEALS_REFUND = 6
-  MAX_PARKING = 20
-  REGULAR_PARKING_REFUND = 1
-  EXCESS_PARKING_REFUND = 0.5
+  DEFAULT_CALCULATION_RULES = {
+    'TRANSPORTATION' => AbstractCalculation.new(max: 100, regular: 0.12, extra: 0.08),
+    'MEAL' => AbstractCalculation.new(max: 3, regular: 10, extra: 6),
+    'PARKING' => AbstractCalculation.new(max: 20, regular: 1, extra: 0.5)
+  }
   
-  def initialize(refunds)
-    @errors = false
-    @refunds = refunds 
-    @transportation = 0
-    @meal = 0
-    @parking = 0
-    @total_transportation = 0
-    @total_meal = 0
-    @total_parking = 0
-    @total_refund = 0
-    
-    valid_data? ? operate : (@errors = true)
+  def initialize(lines = [], calculation_rules: DEFAULT_CALCULATION_RULES)
+    @lines = lines
+    @calculation_rules = calculation_rules
   end
 
   def errors?
-    @errors
+    !@lines.is_a?(Array)
   end
 
-  def total_transportation
-    @total_transportation
-  end
-
-  def total_meal
-    @total_meal
-  end
-
-  def total_parking
-    @total_parking
+  def total_concept(concept)
+    amount_by_concept[concept]
   end
 
   def total_refund
-    @total_refund
+    amount_by_concept.values.sum
   end
 
   private
-    
-    def valid_data?
-      return @refunds.is_a?(Array)
-    end
-    
-    def operate
-      @refunds.each do |refund|
-        @transportation += refund[:units] if refund[:key] == 'TRANSPORTATION'
-        @meal += refund[:units] if refund[:key] == 'MEAL'
-        @parking += refund[:units] if refund[:key] == 'PARKING'
+
+  def amount_by_concept
+    units_by_concept.map do |concept, units|
+      [concept, calculator_for(concept).calculate_refund(units)]
+    end.to_h
+  end
+
+  def units_by_concept
+    @lines
+      .group_by { |l| l[:key] }
+      .transform_values do |lines|
+        lines.sum { |l| l[:units] }
       end
-      
-      calculate_refund unless @transportation == 0 && @meal == 0 && @parking == 0  
-    end
+  end
 
-    def calculate_refund
-      @total_transportation = AbstractCalculation.new(@transportation, MAX_KM, REGULAR_KM_RATE, EXCESS_KM_RATE).calculate_refund
-      @total_meal = AbstractCalculation.new(@meal, MAX_MEALS, REGULAR_MEALS_REFUND, EXCESS_MEALS_REFUND).calculate_refund
-      @total_parking = AbstractCalculation.new(@parking, MAX_PARKING, REGULAR_PARKING_REFUND, EXCESS_PARKING_REFUND).calculate_refund
-
-      @total_refund = @total_transportation + @total_meal + @total_parking
-    end
+  def calculator_for(concept)
+    @calculation_rules[concept]
+  end
 end
